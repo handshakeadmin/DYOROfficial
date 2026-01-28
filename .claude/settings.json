@@ -1,0 +1,115 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/schemas/settings.schema.json",
+  "project": {
+    "name": "PeptideSource",
+    "description": "B2B research peptide e-commerce platform",
+    "type": "web-app"
+  },
+  "preferences": {
+    "autoCommit": false,
+    "branchPrefix": "feat/",
+    "checkpointsEnabled": true,
+    "codingStyle": {
+      "language": "typescript",
+      "strict": true,
+      "noAny": true,
+      "preferFunctional": true
+    }
+  },
+  "permissions": {
+    "allowedCommands": [
+      "npm run *",
+      "npx *",
+      "git *",
+      "supabase *"
+    ],
+    "blockedPatterns": [
+      ".env*",
+      "*secret*",
+      "*credentials*"
+    ]
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun .claude/hooks/index.ts Notification"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun .claude/hooks/index.ts Stop"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun .claude/hooks/index.ts PreToolUse"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun .claude/hooks/index.ts PostToolUse"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun .claude/hooks/index.ts SubagentStop"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun .claude/hooks/index.ts UserPromptSubmit"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun .claude/hooks/index.ts PreCompact"
+          }
+        ]
+      }
+    ]
+  },
+  "agents": {
+    "enabled": true,
+    "customAgentsPath": ".claude/agents"
+  }
+}
