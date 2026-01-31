@@ -8,6 +8,27 @@ export interface CartItemData {
   quantity: number;
 }
 
+// Helper to get product UUID from slug or ID
+async function getProductUuid(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  productIdOrSlug: string
+): Promise<string | null> {
+  // If it's already a UUID format, return as-is
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(productIdOrSlug)) {
+    return productIdOrSlug;
+  }
+
+  // Otherwise, look up by slug
+  const { data } = await supabase
+    .from("products")
+    .select("id")
+    .eq("slug", productIdOrSlug)
+    .single();
+
+  return data?.id || null;
+}
+
 export async function getCart(): Promise<{
   items: CartItemData[];
   cartId: string | null;
@@ -35,9 +56,10 @@ export async function getCart(): Promise<{
 
     const cartId = cartResult.data.id;
 
+    // Get cart items with product slugs via join
     const itemsResult = await supabase
       .from("cart_items")
-      .select("product_id, quantity")
+      .select("product_id, quantity, products(slug)")
       .eq("cart_id", cartId);
 
     if (itemsResult.error) {
@@ -46,9 +68,10 @@ export async function getCart(): Promise<{
 
     const items = itemsResult.data || [];
 
+    // Return slugs instead of UUIDs so frontend can match with static products
     return {
-      items: items.map((item: { product_id: string; quantity: number }) => ({
-        productId: item.product_id,
+      items: items.map((item: { product_id: string; quantity: number; products: { slug: string } | null }) => ({
+        productId: item.products?.slug || item.product_id,
         quantity: item.quantity,
       })),
       cartId,
@@ -60,7 +83,7 @@ export async function getCart(): Promise<{
 }
 
 export async function addToCart(
-  productId: string
+  productIdOrSlug: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await createClient();
@@ -70,6 +93,12 @@ export async function addToCart(
 
     if (!user) {
       return { success: false, error: "Not authenticated" };
+    }
+
+    // Get the actual product UUID
+    const productUuid = await getProductUuid(supabase, productIdOrSlug);
+    if (!productUuid) {
+      return { success: false, error: "Product not found" };
     }
 
     const cartResult = await supabase
@@ -88,7 +117,7 @@ export async function addToCart(
       .from("cart_items")
       .select("id, quantity")
       .eq("cart_id", cartId)
-      .eq("product_id", productId)
+      .eq("product_id", productUuid)
       .single();
 
     if (existingResult.data) {
@@ -103,7 +132,7 @@ export async function addToCart(
     } else {
       const { error } = await supabase.from("cart_items").insert({
         cart_id: cartId,
-        product_id: productId,
+        product_id: productUuid,
         quantity: 1,
       });
 
@@ -120,7 +149,7 @@ export async function addToCart(
 }
 
 export async function updateCartItemQuantity(
-  productId: string,
+  productIdOrSlug: string,
   quantity: number
 ): Promise<{ success: boolean; error: string | null }> {
   try {
@@ -131,6 +160,12 @@ export async function updateCartItemQuantity(
 
     if (!user) {
       return { success: false, error: "Not authenticated" };
+    }
+
+    // Get the actual product UUID
+    const productUuid = await getProductUuid(supabase, productIdOrSlug);
+    if (!productUuid) {
+      return { success: false, error: "Product not found" };
     }
 
     const cartResult = await supabase
@@ -150,7 +185,7 @@ export async function updateCartItemQuantity(
         .from("cart_items")
         .delete()
         .eq("cart_id", cartId)
-        .eq("product_id", productId);
+        .eq("product_id", productUuid);
 
       if (error) {
         return { success: false, error: error.message };
@@ -160,7 +195,7 @@ export async function updateCartItemQuantity(
         .from("cart_items")
         .update({ quantity })
         .eq("cart_id", cartId)
-        .eq("product_id", productId);
+        .eq("product_id", productUuid);
 
       if (error) {
         return { success: false, error: error.message };
@@ -175,7 +210,7 @@ export async function updateCartItemQuantity(
 }
 
 export async function removeFromCart(
-  productId: string
+  productIdOrSlug: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await createClient();
@@ -185,6 +220,12 @@ export async function removeFromCart(
 
     if (!user) {
       return { success: false, error: "Not authenticated" };
+    }
+
+    // Get the actual product UUID
+    const productUuid = await getProductUuid(supabase, productIdOrSlug);
+    if (!productUuid) {
+      return { success: false, error: "Product not found" };
     }
 
     const cartResult = await supabase
@@ -203,7 +244,7 @@ export async function removeFromCart(
       .from("cart_items")
       .delete()
       .eq("cart_id", cartId)
-      .eq("product_id", productId);
+      .eq("product_id", productUuid);
 
     if (error) {
       return { success: false, error: error.message };
@@ -283,6 +324,19 @@ export async function mergeGuestCart(
 
     const cartId = cartResult.data.id;
 
+    // Convert slugs to UUIDs and build a map
+    const itemsWithUuids: { uuid: string; quantity: number }[] = [];
+    for (const item of guestItems) {
+      const uuid = await getProductUuid(supabase, item.productId);
+      if (uuid) {
+        itemsWithUuids.push({ uuid, quantity: item.quantity });
+      }
+    }
+
+    if (itemsWithUuids.length === 0) {
+      return { success: true, error: null };
+    }
+
     const existingResult = await supabase
       .from("cart_items")
       .select("product_id, quantity")
@@ -293,19 +347,19 @@ export async function mergeGuestCart(
       existingItems.map((item: { product_id: string; quantity: number }) => [item.product_id, item.quantity] as [string, number])
     );
 
-    for (const guestItem of guestItems) {
-      const existingQty = existingMap.get(guestItem.productId);
+    for (const guestItem of itemsWithUuids) {
+      const existingQty = existingMap.get(guestItem.uuid);
 
       if (existingQty != null) {
         await supabase
           .from("cart_items")
           .update({ quantity: existingQty + guestItem.quantity })
           .eq("cart_id", cartId)
-          .eq("product_id", guestItem.productId);
+          .eq("product_id", guestItem.uuid);
       } else {
         await supabase.from("cart_items").insert({
           cart_id: cartId,
-          product_id: guestItem.productId,
+          product_id: guestItem.uuid,
           quantity: guestItem.quantity,
         });
       }

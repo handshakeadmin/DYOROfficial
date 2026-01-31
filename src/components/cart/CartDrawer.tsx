@@ -66,12 +66,12 @@ export function CartDrawer() {
                 {items.map((item) => (
                   <li key={item.product.id} className="flex gap-4 py-4 border-b">
                     {/* Product Image */}
-                    <div className="relative h-24 w-24 bg-background-secondary rounded-lg overflow-hidden shrink-0">
+                    <div className="relative h-16 w-16 bg-white rounded-lg overflow-hidden shrink-0">
                       <Image
                         src={item.product.images[0] || "/images/placeholder.jpg"}
                         alt={item.product.name}
                         fill
-                        className="object-cover"
+                        className="object-contain"
                       />
                     </div>
 

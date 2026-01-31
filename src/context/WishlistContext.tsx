@@ -6,6 +6,7 @@ import {
   useReducer,
   useEffect,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 import { Product, WishlistItem } from "@/types";
@@ -44,7 +45,7 @@ interface WishlistContextType extends WishlistState {
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
-const STORAGE_KEY = "peptidesource-wishlist";
+const STORAGE_KEY = "dyorwellness-wishlist";
 
 function wishlistReducer(state: WishlistState, action: WishlistAction): WishlistState {
   switch (action.type) {
@@ -149,29 +150,46 @@ export function WishlistProvider({ children }: { children: ReactNode }): React.J
     }
   }, [user]);
 
+  // Track previous user to detect logout (using ref to avoid re-renders)
+  const prevUserRef = useRef<typeof user>(undefined);
+
   useEffect(() => {
     const initWishlist = async (): Promise<void> => {
+      const wasLoggedIn = prevUserRef.current !== null && prevUserRef.current !== undefined;
+      const isNowLoggedOut = !user;
+
       if (user) {
         const guestWishlist = getLocalStorageWishlist();
 
         if (guestWishlist.length > 0) {
-          const guestIds = guestWishlist.map((item) => item.product.id);
-          await mergeGuestWishlist(guestIds);
+          // Use slugs for server merge since database uses slugs as identifiers
+          const guestSlugs = guestWishlist.map((item) => item.product.slug);
+          await mergeGuestWishlist(guestSlugs);
           clearLocalStorageWishlist();
         }
 
         await syncWithServer();
+      } else if (wasLoggedIn && isNowLoggedOut) {
+        // Transitioning from logged-in to logged-out: clear everything
+        clearLocalStorageWishlist();
+        dispatch({ type: "CLEAR_WISHLIST" });
+        dispatch({ type: "SET_LOADING", payload: false });
       } else {
+        // Initial load as guest: load from localStorage
         const localWishlist = getLocalStorageWishlist();
         dispatch({ type: "LOAD_WISHLIST", payload: localWishlist });
       }
+
+      // Update ref after processing
+      prevUserRef.current = user;
     };
 
     initWishlist();
   }, [user, syncWithServer]);
 
   useEffect(() => {
-    if (!user && !state.isLoading) {
+    // Only save to localStorage for guest users who have items
+    if (!user && !state.isLoading && state.items.length > 0) {
       setLocalStorageWishlist(state.items);
     }
   }, [state.items, user, state.isLoading]);
@@ -181,7 +199,8 @@ export function WishlistProvider({ children }: { children: ReactNode }): React.J
       dispatch({ type: "ADD_ITEM", payload: product });
 
       if (user) {
-        const result = await addToWishlistServer(product.id);
+        // Use slug for server lookup since database uses slugs as identifiers
+        const result = await addToWishlistServer(product.slug);
         if (!result.success) {
           console.error("Failed to add item to server wishlist:", result.error);
         }
@@ -192,16 +211,19 @@ export function WishlistProvider({ children }: { children: ReactNode }): React.J
 
   const removeItem = useCallback(
     async (productId: string): Promise<void> => {
+      // Find the product to get its slug for server removal
+      const item = state.items.find((i) => i.product.id === productId);
       dispatch({ type: "REMOVE_ITEM", payload: productId });
 
-      if (user) {
-        const result = await removeFromWishlistServer(productId);
+      if (user && item) {
+        // Use slug for server lookup since database uses slugs as identifiers
+        const result = await removeFromWishlistServer(item.product.slug);
         if (!result.success) {
           console.error("Failed to remove item from server wishlist:", result.error);
         }
       }
     },
-    [user]
+    [user, state.items]
   );
 
   const clearWishlist = useCallback(async (): Promise<void> => {

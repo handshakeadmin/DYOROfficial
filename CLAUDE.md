@@ -1,7 +1,9 @@
 # PeptideSource - Project Instructions
 
 ## Project Overview
-B2B e-commerce platform for research-grade peptides. Frontend-only Next.js application with React Context for state management. All product data is static (no backend integration yet).
+B2B e-commerce platform for research-grade peptides. Next.js application with React Context for state management, Supabase for auth, and PayPal for payments.
+
+**Directory**: `/Users/matthewschwen/projects/DYORofficial/` (also referenced as PeptideSource)
 
 ## Tech Stack
 - **Framework**: Next.js 16 (App Router)
@@ -71,7 +73,7 @@ searchProducts(query)
 ```
 
 ## Domain Types
-- **ProductType**: `"lyophilized" | "capsules" | "nasal-spray" | "serum"`
+- **ProductType**: `"lyophilized"` (all products are lyophilized vials)
 - **Product**: Core product with price, dosage, purity, sequence, researchApplications
 - **CartItem**: Product + quantity
 - **Order**: Full order with items, addresses, status
@@ -85,6 +87,13 @@ npm run start  # Start production server
 npm run lint   # Run ESLint
 ```
 
+## Image Standards
+All cart-related product images use consistent sizing:
+- **CartDrawer**: 64×64px (`h-16 w-16`)
+- **Cart Page**: 64×64px (`h-16 w-16`)
+- **Checkout Order Summary**: 56×56px (`w-14 h-14`)
+- All use `object-contain` with white background for full product visibility (no cropping)
+
 ## Current Status & TODOs
 **Implemented:**
 - Product catalog with filtering/sorting
@@ -92,19 +101,27 @@ npm run lint   # Run ESLint
 - Wishlist with persistence
 - Product detail pages
 - Static pages (About, FAQ, Contact)
+- Checkout flow with PayPal integration
+- Discount code system
+- User authentication (Supabase)
 
 **Not Yet Implemented:**
-- Checkout flow (`/checkout` page)
-- Payment integration
-- User authentication
-- Backend API
-- Database integration
-- Order management
+- Backend API for orders
+- Database integration for orders
+- Order management dashboard
 - Tests
 
 ## Business Domain Notes
 - All products are "Research Use Only - Not For Human Consumption"
+- All products are lyophilized (freeze-dried) peptides in sealed vials
 - Products include: BPC-157, Semaglutide, Tirzepatide, TB-500, Ipamorelin, etc.
 - Purity standard: 99%+
-- Free shipping threshold: $500+
-- Product categories: Lyophilized, Capsules, Nasal Sprays, Serums
+- FREE shipping on ALL orders (no minimum)
+
+## Recent Changes (Jan 2026)
+- Fixed cart image sizing across all cart-related components
+- Standardized to `object-contain` with white backgrounds
+- Key files modified:
+  - `src/components/cart/CartDrawer.tsx`
+  - `src/app/cart/page.tsx`
+  - `src/app/checkout/page.tsx`

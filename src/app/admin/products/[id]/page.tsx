@@ -42,7 +42,7 @@ interface ProductDetail {
 }
 
 const productTypeOptions = [
-  { value: "lyophilized", label: "Lyophilized Vials" },
+  { value: "lyophilized", label: "Vials" },
 ];
 
 const categoryOptions = [

@@ -1,12 +1,9 @@
 import Link from "next/link";
-import { Mail, Phone, MapPin, Clock, Shield, FlaskConical, Award, FileCheck } from "lucide-react";
+import Image from "next/image";
+import { Mail, MapPin, Clock } from "lucide-react";
 
 const productLinks = [
   { name: "All Peptides", href: "/products" },
-  { name: "Lyophilized", href: "/products?type=lyophilized" },
-  { name: "Capsules", href: "/products?type=capsules" },
-  { name: "Nasal Sprays", href: "/products?type=nasal-spray" },
-  { name: "Serums", href: "/products?type=serum" },
 ];
 
 const popularProducts = [
@@ -22,23 +19,30 @@ const companyLinks = [
   { name: "About Us", href: "/about" },
   { name: "Contact", href: "/contact" },
   { name: "FAQ", href: "/faq" },
-  { name: "Shipping Policy", href: "/shipping-policy" },
-  { name: "Return Policy", href: "/return-policy" },
+  { name: "Shipping Policy", href: "/policies/shipping" },
+  { name: "Return Policy", href: "/policies/returns" },
   { name: "Terms of Service", href: "/terms" },
-  { name: "Privacy Policy", href: "/privacy" },
+  { name: "Privacy Policy", href: "/policies/privacy" },
 ];
 
 export function Footer(): React.JSX.Element {
   return (
     <footer className="bg-primary text-primary-foreground">
       {/* Main Footer */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Brand & Contact */}
-          <div className="space-y-6">
-            <Link href="/" className="inline-block">
+          <div className="space-y-4">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <Image
+                src="/images/dyorlogo.jpeg"
+                alt="DYOR Wellness"
+                width={36}
+                height={36}
+                className="h-9 w-9"
+              />
               <span className="text-2xl font-bold">
-                Peptide<span className="text-accent">Source</span>
+                DYOR<span className="text-accent">Wellness</span>
               </span>
             </Link>
             <p className="text-sm text-primary-foreground/80">
@@ -47,18 +51,11 @@ export function Footer(): React.JSX.Element {
             </p>
             <div className="space-y-3">
               <a
-                href="tel:1-888-555-0123"
-                className="flex items-center gap-3 text-sm hover:text-accent transition-colors"
-              >
-                <Phone className="h-4 w-4 text-accent" />
-                <span>1-888-555-0123</span>
-              </a>
-              <a
-                href="mailto:info@peptidesource.com"
+                href="mailto:info@dyorwellness.com"
                 className="flex items-center gap-3 text-sm hover:text-accent transition-colors"
               >
                 <Mail className="h-4 w-4 text-accent" />
-                <span>info@peptidesource.com</span>
+                <span>info@dyorwellness.com</span>
               </a>
               <div className="flex items-start gap-3 text-sm">
                 <MapPin className="h-4 w-4 text-accent shrink-0 mt-0.5" />
@@ -109,106 +106,35 @@ export function Footer(): React.JSX.Element {
             </ul>
           </div>
 
-          {/* Company & Newsletter */}
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-accent mb-4">
-                Company
-              </h3>
-              <ul className="space-y-2">
-                {companyLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-primary-foreground/80 hover:text-accent transition-colors"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-accent mb-4">
-                Newsletter
-              </h3>
-              <p className="text-sm text-primary-foreground/80 mb-3">
-                Stay updated with new products and research news.
-              </p>
-              <form className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-sm placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-accent text-accent-foreground font-medium rounded-lg hover:bg-accent-hover transition-colors"
-                >
-                  Join
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Certifications */}
-      <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-center text-accent mb-6">
-            Quality Certifications
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
-            <div className="flex flex-col items-center gap-2 p-4 bg-white/5 rounded-lg border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-accent" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-primary-foreground">GMP</p>
-                <p className="text-xs text-primary-foreground/60">Certified</p>
-              </div>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-4 bg-white/5 rounded-lg border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-                <Award className="w-5 h-5 text-accent" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-primary-foreground">ISO 9001</p>
-                <p className="text-xs text-primary-foreground/60">Quality Management</p>
-              </div>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-4 bg-white/5 rounded-lg border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-                <FlaskConical className="w-5 h-5 text-accent" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-primary-foreground">HPLC</p>
-                <p className="text-xs text-primary-foreground/60">Purity Verified</p>
-              </div>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-4 bg-white/5 rounded-lg border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-                <FileCheck className="w-5 h-5 text-accent" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-primary-foreground">Third-Party</p>
-                <p className="text-xs text-primary-foreground/60">Lab Tested</p>
-              </div>
-            </div>
+          {/* Company */}
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-accent mb-4">
+              Company
+            </h3>
+            <ul className="space-y-2">
+              {companyLinks.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-primary-foreground/80 hover:text-accent transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
 
       {/* Disclaimer */}
       <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="text-xs text-primary-foreground/60 space-y-2">
             <p>
-              <strong>DISCLAIMER:</strong> All products sold by PeptideSource are intended
+              <strong>DISCLAIMER:</strong> All products sold by DYORWellness are intended
               for research, laboratory, and analytical purposes ONLY. Products are NOT
-              intended for human or veterinary use. PeptideSource is NOT a compounding
+              intended for human or veterinary use. DYORWellness is NOT a compounding
               pharmacy or pharmaceutical company.
             </p>
             <p>
@@ -225,16 +151,9 @@ export function Footer(): React.JSX.Element {
       {/* Copyright */}
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-primary-foreground/60">
-              &copy; {new Date().getFullYear()} PeptideSource. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4">
-              <img src="/images/payment/visa.svg" alt="Visa" className="h-6 opacity-60" />
-              <img src="/images/payment/mastercard.svg" alt="Mastercard" className="h-6 opacity-60" />
-              <img src="/images/payment/amex.svg" alt="American Express" className="h-6 opacity-60" />
-            </div>
-          </div>
+          <p className="text-xs text-primary-foreground/60 text-center">
+            &copy; {new Date().getFullYear()} DYORWellness. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

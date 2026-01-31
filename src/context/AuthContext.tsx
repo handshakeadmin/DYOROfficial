@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { signOut as signOutServer } from "@/app/actions/auth";
 import type { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 
 interface UserProfile {
@@ -17,6 +18,7 @@ interface UserProfile {
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
+  is_admin: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -52,36 +54,54 @@ export function AuthProvider({ children }: { children: ReactNode }): React.JSX.E
 
   const fetchProfile = useCallback(
     async (userId: string): Promise<void> => {
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", userId)
+          .single();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        return;
+        if (error) {
+          // Silently ignore errors (including abort errors in dev mode)
+          if (!error.message?.includes("AbortError")) {
+            console.error("Error fetching profile:", error);
+          }
+          return;
+        }
+
+        setProfile(data);
+      } catch (err) {
+        // Silently ignore abort errors
+        if (!(err instanceof Error && err.name === "AbortError")) {
+          console.error("Error fetching profile:", err);
+        }
       }
-
-      setProfile(data);
     },
     [supabase]
   );
 
   useEffect(() => {
+    let mounted = true;
+
     const initAuth = async (): Promise<void> => {
-      const {
-        data: { session: currentSession },
-      } = await supabase.auth.getSession();
+      try {
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
 
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+        if (!mounted) return;
 
-      if (currentSession?.user) {
-        await fetchProfile(currentSession.user.id);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          await fetchProfile(currentSession.user.id);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
-
-      setIsLoading(false);
     };
 
     initAuth();
@@ -89,6 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }): React.JSX.E
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, newSession: Session | null) => {
+      if (!mounted) return;
+
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
@@ -104,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }): React.JSX.E
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [supabase, fetchProfile]);
@@ -137,7 +160,18 @@ export function AuthProvider({ children }: { children: ReactNode }): React.JSX.E
   };
 
   const signOut = async (): Promise<void> => {
+    // Clear local state immediately
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+
+    // Sign out on server to clear cookies
+    await signOutServer();
+    // Also sign out on client to clear local state
     await supabase.auth.signOut();
+
+    // Redirect to home page with full reload to clear any cached state
+    window.location.href = "/";
   };
 
   const resetPassword = async (email: string): Promise<{ error: Error | null }> => {

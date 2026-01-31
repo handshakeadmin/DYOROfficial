@@ -1,0 +1,1 @@
+export { DiscountCodesTable } from "./DiscountCodesTable";

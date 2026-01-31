@@ -21,7 +21,7 @@ export function ContactForm() {
   if (isSubmitted) {
     return (
       <div className="text-center py-12">
-        <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-12 h-12 bg-success/10 rounded flex items-center justify-center mx-auto mb-4">
           <Send className="h-8 w-8 text-success" />
         </div>
         <h3 className="text-xl font-semibold mb-2">Message Sent!</h3>
@@ -51,7 +51,7 @@ export function ContactForm() {
             id="firstName"
             name="firstName"
             required
-            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+            className="w-full px-3 py-2 border rounded focus:outline-none focus:border-primary"
             placeholder="John"
           />
         </div>
@@ -64,7 +64,7 @@ export function ContactForm() {
             id="lastName"
             name="lastName"
             required
-            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+            className="w-full px-3 py-2 border rounded focus:outline-none focus:border-primary"
             placeholder="Doe"
           />
         </div>
@@ -80,7 +80,7 @@ export function ContactForm() {
             id="email"
             name="email"
             required
-            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+            className="w-full px-3 py-2 border rounded focus:outline-none focus:border-primary"
             placeholder="john@example.com"
           />
         </div>
@@ -92,7 +92,7 @@ export function ContactForm() {
             type="tel"
             id="phone"
             name="phone"
-            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+            className="w-full px-3 py-2 border rounded focus:outline-none focus:border-primary"
             placeholder="(555) 123-4567"
           />
         </div>
@@ -119,7 +119,7 @@ export function ContactForm() {
           id="subject"
           name="subject"
           required
-          className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-white"
+          className="w-full px-3 py-2 border rounded focus:outline-none focus:border-primary bg-white"
         >
           <option value="">Select a subject</option>
           <option value="product">Product Inquiry</option>
@@ -153,7 +153,7 @@ export function ContactForm() {
           name="message"
           required
           rows={5}
-          className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+          className="w-full px-3 py-2 border rounded focus:outline-none focus:border-primary resize-none"
           placeholder="How can we help you?"
         />
       </div>
@@ -164,7 +164,7 @@ export function ContactForm() {
           id="confirm"
           name="confirm"
           required
-          className="mt-1 w-4 h-4 rounded border-border text-accent focus:ring-accent"
+          className="mt-1 w-4 h-4 rounded border-border text-primary focus:ring-primary"
         />
         <label htmlFor="confirm" className="text-sm text-muted">
           I confirm that I am a qualified researcher and any products purchased will
@@ -176,7 +176,7 @@ export function ContactForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full py-4 bg-accent text-accent-foreground font-semibold rounded-full hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full py-2.5 bg-primary text-primary-foreground font-medium rounded hover:bg-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isSubmitting ? (
           <>

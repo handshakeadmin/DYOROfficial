@@ -6,6 +6,7 @@ import {
   useReducer,
   useEffect,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 import { CartItem, Product } from "@/types";
@@ -54,7 +55,7 @@ interface CartContextType extends CartState {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const STORAGE_KEY = "peptidesource-cart";
+const STORAGE_KEY = "dyorwellness-cart";
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
@@ -192,14 +193,21 @@ export function CartProvider({ children }: { children: ReactNode }): React.JSX.E
     }
   }, [user]);
 
+  // Track previous user to detect logout (using ref to avoid re-renders)
+  const prevUserRef = useRef<typeof user>(undefined);
+
   useEffect(() => {
     const initCart = async (): Promise<void> => {
+      const wasLoggedIn = prevUserRef.current !== null && prevUserRef.current !== undefined;
+      const isNowLoggedOut = !user;
+
       if (user) {
         const guestCart = getLocalStorageCart();
 
         if (guestCart.length > 0) {
+          // Use slugs for server merge since database uses slugs as identifiers
           const guestCartData: CartItemData[] = guestCart.map((item) => ({
-            productId: item.product.id,
+            productId: item.product.slug,
             quantity: item.quantity,
           }));
           await mergeGuestCart(guestCartData);
@@ -207,17 +215,27 @@ export function CartProvider({ children }: { children: ReactNode }): React.JSX.E
         }
 
         await syncWithServer();
+      } else if (wasLoggedIn && isNowLoggedOut) {
+        // Transitioning from logged-in to logged-out: clear everything
+        clearLocalStorageCart();
+        dispatch({ type: "CLEAR_CART" });
+        dispatch({ type: "SET_LOADING", payload: false });
       } else {
+        // Initial load as guest: load from localStorage
         const localCart = getLocalStorageCart();
         dispatch({ type: "LOAD_CART", payload: localCart });
       }
+
+      // Update ref after processing
+      prevUserRef.current = user;
     };
 
     initCart();
   }, [user, syncWithServer]);
 
   useEffect(() => {
-    if (!user && !state.isLoading) {
+    // Only save to localStorage for guest users who have items
+    if (!user && !state.isLoading && state.items.length > 0) {
       setLocalStorageCart(state.items);
     }
   }, [state.items, user, state.isLoading]);
@@ -227,7 +245,8 @@ export function CartProvider({ children }: { children: ReactNode }): React.JSX.E
       dispatch({ type: "ADD_ITEM", payload: product });
 
       if (user) {
-        const result = await addToCartServer(product.id);
+        // Use slug for server lookup since database uses slugs as identifiers
+        const result = await addToCartServer(product.slug);
         if (!result.success) {
           console.error("Failed to add item to server cart:", result.error);
         }
@@ -238,30 +257,36 @@ export function CartProvider({ children }: { children: ReactNode }): React.JSX.E
 
   const removeItem = useCallback(
     async (productId: string): Promise<void> => {
+      // Find the product to get its slug for server removal
+      const item = state.items.find((i) => i.product.id === productId);
       dispatch({ type: "REMOVE_ITEM", payload: productId });
 
-      if (user) {
-        const result = await removeFromCartServer(productId);
+      if (user && item) {
+        // Use slug for server lookup since database uses slugs as identifiers
+        const result = await removeFromCartServer(item.product.slug);
         if (!result.success) {
           console.error("Failed to remove item from server cart:", result.error);
         }
       }
     },
-    [user]
+    [user, state.items]
   );
 
   const updateQuantity = useCallback(
     async (productId: string, quantity: number): Promise<void> => {
+      // Find the product to get its slug for server update
+      const item = state.items.find((i) => i.product.id === productId);
       dispatch({ type: "UPDATE_QUANTITY", payload: { productId, quantity } });
 
-      if (user) {
-        const result = await updateCartItemQuantity(productId, quantity);
+      if (user && item) {
+        // Use slug for server lookup since database uses slugs as identifiers
+        const result = await updateCartItemQuantity(item.product.slug, quantity);
         if (!result.success) {
           console.error("Failed to update cart item on server:", result.error);
         }
       }
     },
-    [user]
+    [user, state.items]
   );
 
   const clearCart = useCallback(async (): Promise<void> => {

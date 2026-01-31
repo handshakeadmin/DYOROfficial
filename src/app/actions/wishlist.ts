@@ -3,6 +3,27 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+// Helper to get product UUID from slug or ID
+async function getProductUuid(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  productIdOrSlug: string
+): Promise<string | null> {
+  // If it's already a UUID format, return as-is
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(productIdOrSlug)) {
+    return productIdOrSlug;
+  }
+
+  // Otherwise, look up by slug
+  const { data } = await supabase
+    .from("products")
+    .select("id")
+    .eq("slug", productIdOrSlug)
+    .single();
+
+  return data?.id || null;
+}
+
 export async function getWishlist(): Promise<{
   items: string[];
   wishlistId: string | null;
@@ -30,9 +51,10 @@ export async function getWishlist(): Promise<{
 
     const wishlistId = wishlistResult.data.id;
 
+    // Get wishlist items with product slugs via join
     const itemsResult = await supabase
       .from("wishlist_items")
-      .select("product_id")
+      .select("product_id, products(slug)")
       .eq("wishlist_id", wishlistId);
 
     if (itemsResult.error) {
@@ -41,8 +63,11 @@ export async function getWishlist(): Promise<{
 
     const items = itemsResult.data || [];
 
+    // Return slugs instead of UUIDs so frontend can match with static products
     return {
-      items: items.map((item: { product_id: string }) => item.product_id),
+      items: items.map((item: { product_id: string; products: { slug: string } | null }) =>
+        item.products?.slug || item.product_id
+      ),
       wishlistId,
       error: null,
     };
@@ -52,7 +77,7 @@ export async function getWishlist(): Promise<{
 }
 
 export async function addToWishlist(
-  productId: string
+  productIdOrSlug: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await createClient();
@@ -62,6 +87,12 @@ export async function addToWishlist(
 
     if (!user) {
       return { success: false, error: "Not authenticated" };
+    }
+
+    // Get the actual product UUID
+    const productUuid = await getProductUuid(supabase, productIdOrSlug);
+    if (!productUuid) {
+      return { success: false, error: "Product not found" };
     }
 
     const wishlistResult = await supabase
@@ -80,7 +111,7 @@ export async function addToWishlist(
       .from("wishlist_items")
       .select("id")
       .eq("wishlist_id", wishlistId)
-      .eq("product_id", productId)
+      .eq("product_id", productUuid)
       .single();
 
     if (existingResult.data) {
@@ -89,7 +120,7 @@ export async function addToWishlist(
 
     const { error } = await supabase.from("wishlist_items").insert({
       wishlist_id: wishlistId,
-      product_id: productId,
+      product_id: productUuid,
     });
 
     if (error) {
@@ -104,7 +135,7 @@ export async function addToWishlist(
 }
 
 export async function removeFromWishlist(
-  productId: string
+  productIdOrSlug: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await createClient();
@@ -114,6 +145,12 @@ export async function removeFromWishlist(
 
     if (!user) {
       return { success: false, error: "Not authenticated" };
+    }
+
+    // Get the actual product UUID
+    const productUuid = await getProductUuid(supabase, productIdOrSlug);
+    if (!productUuid) {
+      return { success: false, error: "Product not found" };
     }
 
     const wishlistResult = await supabase
@@ -132,7 +169,7 @@ export async function removeFromWishlist(
       .from("wishlist_items")
       .delete()
       .eq("wishlist_id", wishlistId)
-      .eq("product_id", productId);
+      .eq("product_id", productUuid);
 
     if (error) {
       return { success: false, error: error.message };
@@ -212,6 +249,19 @@ export async function mergeGuestWishlist(
 
     const wishlistId = wishlistResult.data.id;
 
+    // Convert slugs to UUIDs
+    const productUuids: string[] = [];
+    for (const item of guestItems) {
+      const uuid = await getProductUuid(supabase, item);
+      if (uuid) {
+        productUuids.push(uuid);
+      }
+    }
+
+    if (productUuids.length === 0) {
+      return { success: true, error: null };
+    }
+
     const existingResult = await supabase
       .from("wishlist_items")
       .select("product_id")
@@ -220,7 +270,7 @@ export async function mergeGuestWishlist(
     const existingItems = existingResult.data || [];
     const existingSet = new Set(existingItems.map((item: { product_id: string }) => item.product_id));
 
-    const newItems = guestItems.filter((id) => !existingSet.has(id));
+    const newItems = productUuids.filter((id) => !existingSet.has(id));
 
     if (newItems.length > 0) {
       await supabase.from("wishlist_items").insert(

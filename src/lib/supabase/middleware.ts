@@ -37,7 +37,8 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   } = await supabase.auth.getUser();
 
   // Protected routes - redirect to login if not authenticated
-  const protectedRoutes = ["/account", "/checkout"];
+  // Note: /checkout allows guest checkout, only /account/* requires auth
+  const protectedRoutes = ["/account"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
@@ -47,6 +48,57 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     url.pathname = "/login";
     url.searchParams.set("redirect", request.nextUrl.pathname);
     return NextResponse.redirect(url);
+  }
+
+  // Admin routes - redirect to admin login if not authenticated or not admin
+  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
+  const isAdminLoginRoute = request.nextUrl.pathname === "/admin/login";
+
+  if (isAdminRoute && !isAdminLoginRoute) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/login";
+      return NextResponse.redirect(url);
+    }
+
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from("users")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile?.is_admin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/login";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Affiliate routes - redirect to affiliate login if not authenticated or not an affiliate
+  const isAffiliateRoute = request.nextUrl.pathname.startsWith("/affiliate");
+  const isAffiliateLoginRoute = request.nextUrl.pathname === "/affiliate/login";
+
+  if (isAffiliateRoute && !isAffiliateLoginRoute) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/affiliate/login";
+      return NextResponse.redirect(url);
+    }
+
+    // Check if user is an affiliate
+    const { data: affiliateCode } = await supabase
+      .from("discount_codes")
+      .select("id")
+      .eq("affiliate_email", user.email)
+      .eq("is_affiliate", true)
+      .single();
+
+    if (!affiliateCode) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/affiliate/login";
+      return NextResponse.redirect(url);
+    }
   }
 
   // Redirect authenticated users away from auth pages

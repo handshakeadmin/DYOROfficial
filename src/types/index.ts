@@ -1,16 +1,27 @@
-export type ProductType = "lyophilized" | "capsules" | "nasal-spray" | "serum";
+export type ProductType = "lyophilized" | "capsules" | "nasal-spray" | "serum" | "injectable" | "blend";
+
+export type ProductCategory = "metabolic" | "recovery" | "cognitive" | "growth-hormone" | "blends";
+
+export interface ResearchReference {
+  title: string;
+  url: string;
+  source: string;
+}
 
 export interface Product {
   id: string;
   name: string;
+  fullName?: string;
   slug: string;
   description: string;
   shortDescription: string;
+  longDescription?: string;
   price: number;
   originalPrice?: number;
   sku: string;
   type: ProductType;
-  category: string;
+  category: ProductCategory;
+  categoryDisplay: string;
   dosage: string;
   form: string;
   purity: string;
@@ -18,10 +29,16 @@ export interface Product {
   sequence?: string;
   storageInstructions: string;
   researchApplications: string[];
+  benefits?: string[];
+  mechanismOfAction?: string;
+  specifications?: string;
+  researchReferences?: ResearchReference[];
   images: string[];
   inStock: boolean;
   featured: boolean;
   bestSeller: boolean;
+  onSale?: boolean;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
 }

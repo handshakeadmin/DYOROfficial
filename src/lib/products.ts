@@ -1,4 +1,4 @@
-import type { Product } from "@/types";
+import type { Product, ProductCategory, ProductType } from "@/types";
 import {
   products as staticProducts,
   getProductById as getStaticProductById,
@@ -19,7 +19,7 @@ interface DbProduct {
   price: number;
   original_price: number | null;
   sku: string;
-  product_type: "lyophilized" | "capsules" | "nasal-spray" | "serum";
+  product_type: ProductType;
   category_name: string;
   dosage: string;
   form: string;
@@ -32,6 +32,25 @@ interface DbProduct {
   best_seller: boolean;
   created_at: string;
   updated_at: string;
+}
+
+// Map category display names to ProductCategory type
+function mapCategoryToProductCategory(categoryName: string): ProductCategory {
+  const normalized = categoryName.toLowerCase().replace(/\s+/g, '-');
+  const categoryMap: Record<string, ProductCategory> = {
+    'metabolic': 'metabolic',
+    'recovery': 'recovery',
+    'cognitive': 'cognitive',
+    'growth-hormone': 'growth-hormone',
+    'growth hormone': 'growth-hormone',
+    'blends': 'blends',
+    'healing & recovery': 'recovery',
+    'skin & anti-aging': 'recovery',
+    'anti-aging': 'metabolic',
+    'nootropics': 'cognitive',
+    'sexual health': 'metabolic',
+  };
+  return categoryMap[normalized] || 'metabolic';
 }
 
 interface DbProductImage {
@@ -59,7 +78,8 @@ function mapDbProductToProduct(
     originalPrice: dbProduct.original_price ?? undefined,
     sku: dbProduct.sku,
     type: dbProduct.product_type,
-    category: dbProduct.category_name,
+    category: mapCategoryToProductCategory(dbProduct.category_name),
+    categoryDisplay: dbProduct.category_name,
     dosage: dbProduct.dosage,
     form: dbProduct.form,
     purity: dbProduct.purity,
@@ -347,7 +367,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
       (p) =>
         p.name.toLowerCase().includes(lowerQuery) ||
         p.description.toLowerCase().includes(lowerQuery) ||
-        p.category.toLowerCase().includes(lowerQuery)
+        p.categoryDisplay.toLowerCase().includes(lowerQuery)
     );
   }
 
@@ -366,7 +386,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
         (p) =>
           p.name.toLowerCase().includes(lowerQuery) ||
           p.description.toLowerCase().includes(lowerQuery) ||
-          p.category.toLowerCase().includes(lowerQuery)
+          p.categoryDisplay.toLowerCase().includes(lowerQuery)
       );
     }
 
@@ -398,7 +418,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
       (p) =>
         p.name.toLowerCase().includes(lowerQuery) ||
         p.description.toLowerCase().includes(lowerQuery) ||
-        p.category.toLowerCase().includes(lowerQuery)
+        p.categoryDisplay.toLowerCase().includes(lowerQuery)
     );
   }
 }

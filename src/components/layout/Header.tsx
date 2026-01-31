@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import {
   Search,
@@ -13,14 +14,15 @@ import {
   LogOut,
   Package,
   MapPin,
-  Shield,
-  FlaskConical,
-  FileCheck,
+  Settings,
+  Sparkles,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
+import { useChat } from "@/context/ChatContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -29,16 +31,8 @@ const navigation = [
     href: "/products",
   },
   {
-    name: "Capsules",
-    href: "/products?type=capsules",
-  },
-  {
-    name: "Nasal Sprays",
-    href: "/products?type=nasal-spray",
-  },
-  {
-    name: "Serums",
-    href: "/products?type=serum",
+    name: "Blog",
+    href: "/blog",
   },
 ];
 
@@ -49,32 +43,11 @@ export function Header(): React.JSX.Element {
   const { totalItems, openCart } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const { user, profile, signOut, isLoading: authLoading } = useAuth();
+  const { toggleChat } = useChat();
 
   return (
     <>
       <header className="sticky top-0 z-50 bg-white border-b border-border">
-        {/* Trust Indicator Bar */}
-        <div className="bg-primary text-primary-foreground py-1.5 text-center text-xs">
-          <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-6 flex-wrap">
-            <span className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-accent" />
-              GMP Certified
-            </span>
-            <span className="flex items-center gap-1.5">
-              <FlaskConical className="w-3.5 h-3.5 text-accent" />
-              99%+ Purity
-            </span>
-            <span className="flex items-center gap-1.5">
-              <FileCheck className="w-3.5 h-3.5 text-accent" />
-              Third-Party Tested
-            </span>
-            <span className="hidden sm:flex items-center gap-1.5">
-              <Package className="w-3.5 h-3.5 text-accent" />
-              Free Shipping $150+
-            </span>
-          </div>
-        </div>
-
         {/* Promo Banner */}
         <div className="bg-accent text-accent-foreground py-2 text-center text-sm font-medium">
           <p>
@@ -85,26 +58,36 @@ export function Header(): React.JSX.Element {
         {/* Main Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Mobile Menu Button */}
-            <button
-              type="button"
-              className="lg:hidden p-2 -ml-2 text-foreground"
-              onClick={() => setMobileMenuOpen(true)}
-            >
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Open menu</span>
-            </button>
+            {/* Left section: Menu Button + Logo */}
+            <div className="flex items-center gap-2">
+              {/* Mobile Menu Button */}
+              <button
+                type="button"
+                className="md:hidden p-2 -ml-2 text-foreground"
+                onClick={() => setMobileMenuOpen(true)}
+              >
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Open menu</span>
+              </button>
 
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex items-center">
-                <span className="text-2xl font-bold text-primary">Peptide</span>
-                <span className="text-2xl font-bold text-accent">Source</span>
-              </div>
-            </Link>
+              {/* Logo */}
+              <Link href="/" className="flex items-center gap-2">
+                <Image
+                  src="/images/dyorlogo.jpeg"
+                  alt="DYOR Wellness"
+                  width={40}
+                  height={40}
+                  className="h-9 w-9 lg:h-10 lg:w-10"
+                />
+                <div className="flex items-center">
+                  <span className="text-xl lg:text-2xl font-bold text-primary">DYOR</span>
+                  <span className="text-xl lg:text-2xl font-bold text-accent">Wellness</span>
+                </div>
+              </Link>
+            </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-8">
+            <nav className="hidden md:flex items-center gap-8">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
@@ -140,10 +123,21 @@ export function Header(): React.JSX.Element {
                 <span className="sr-only">Search</span>
               </button>
 
-              {/* Wishlist */}
+              {/* AI Assistant */}
+              <button
+                type="button"
+                className="p-2 text-foreground hover:text-accent transition-colors"
+                onClick={toggleChat}
+                id="ai-assistant-button"
+              >
+                <Sparkles className="h-5 w-5" />
+                <span className="sr-only">AI Assistant</span>
+              </button>
+
+              {/* Wishlist - hidden on mobile, access via mobile menu */}
               <Link
                 href="/wishlist"
-                className="relative p-2 text-foreground hover:text-accent transition-colors"
+                className="hidden sm:flex relative p-2 text-foreground hover:text-accent transition-colors"
               >
                 <Heart className="h-5 w-5" />
                 {wishlistCount > 0 && (
@@ -207,6 +201,16 @@ export function Header(): React.JSX.Element {
                             <MapPin className="w-4 h-4" />
                             Addresses
                           </Link>
+                          {profile?.is_admin && (
+                            <Link
+                              href="/admin"
+                              className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-background-secondary transition-colors"
+                              onClick={() => setUserMenuOpen(false)}
+                            >
+                              <Settings className="w-4 h-4" />
+                              Admin Panel
+                            </Link>
+                          )}
                           <div className="border-t border-border mt-2 pt-2">
                             <button
                               type="button"
@@ -253,30 +257,15 @@ export function Header(): React.JSX.Element {
           </div>
         </div>
 
-        {/* Search Bar (expandable) */}
-        <div
-          className={cn(
-            "overflow-hidden transition-all duration-300 bg-background-secondary",
-            searchOpen ? "max-h-20 py-4" : "max-h-0"
-          )}
-        >
-          <div className="max-w-2xl mx-auto px-4">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted" />
-              <input
-                type="text"
-                placeholder="Search for peptides..."
-                className="w-full pl-12 pr-4 py-3 bg-white border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-accent"
-              />
-            </div>
-          </div>
-        </div>
       </header>
+
+      {/* Global Search - modal overlay */}
+      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Mobile Menu */}
       <div
         className={cn(
-          "fixed inset-0 z-50 lg:hidden",
+          "fixed inset-0 z-50 md:hidden",
           mobileMenuOpen ? "visible" : "invisible"
         )}
       >
@@ -297,9 +286,16 @@ export function Header(): React.JSX.Element {
           )}
         >
           <div className="flex items-center justify-between p-4 border-b">
-            <Link href="/" className="flex items-center" onClick={() => setMobileMenuOpen(false)}>
-              <span className="text-xl font-bold text-primary">Peptide</span>
-              <span className="text-xl font-bold text-accent">Source</span>
+            <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
+              <Image
+                src="/images/dyorlogo.jpeg"
+                alt="DYOR Wellness"
+                width={32}
+                height={32}
+                className="h-8 w-8"
+              />
+              <span className="text-xl font-bold text-primary">DYOR</span>
+              <span className="text-xl font-bold text-accent">Wellness</span>
             </Link>
             <button
               type="button"
@@ -341,6 +337,26 @@ export function Header(): React.JSX.Element {
               onClick={() => setMobileMenuOpen(false)}
             >
               FAQ
+            </Link>
+
+            {/* Divider */}
+            <div className="border-t border-border my-2" />
+
+            {/* Wishlist - mobile only (hidden in header on mobile) */}
+            <Link
+              href="/wishlist"
+              className="flex items-center justify-between py-3 px-4 text-foreground hover:bg-background-secondary rounded-lg transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <div className="flex items-center gap-3">
+                <Heart className="h-5 w-5" />
+                <span>Wishlist</span>
+              </div>
+              {wishlistCount > 0 && (
+                <span className="h-5 w-5 bg-accent text-accent-foreground text-xs font-bold rounded-full flex items-center justify-center">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
           </nav>
 

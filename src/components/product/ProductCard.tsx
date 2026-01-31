@@ -33,12 +33,13 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps):
     <Link href={`/products/${product.slug}`} className="group block">
       <div className="card-hover bg-card rounded-xl border overflow-hidden">
         {/* Image Container */}
-        <div className="relative aspect-square bg-background-secondary">
+        <div className="relative aspect-[4/3] bg-white p-2">
           <Image
             src={product.images[0] || "/images/placeholder.jpg"}
             alt={product.name}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-contain transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
 
           {/* Badges */}
@@ -49,7 +50,7 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps):
               </span>
             )}
             {product.originalPrice && (
-              <span className="px-2 py-1 bg-error text-white text-xs font-semibold rounded">
+              <span className="px-2 py-1 bg-white/90 text-error text-xs font-medium rounded border border-error/20">
                 Sale
               </span>
             )}
@@ -78,7 +79,7 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps):
           <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               type="button"
-              className="w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2 bg-white/95 text-primary font-medium text-sm rounded-lg flex items-center justify-center gap-2 border border-border hover:bg-accent hover:text-white hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleAddToCart}
               disabled={!product.inStock}
             >
