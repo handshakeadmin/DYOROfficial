@@ -60,19 +60,19 @@ export function ProductTabs({ product }: ProductTabsProps): React.JSX.Element {
     <div className="mt-12 lg:mt-16">
       {/* Tab Navigation */}
       <div className="border-b border-border">
-        <nav className="flex gap-1 overflow-x-auto pb-px">
+        <nav className="flex flex-wrap gap-1 pb-px">
           {availableTabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={cn(
-                "flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors",
+                "flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors",
                 activeTab === tab.key
                   ? "border-primary text-primary"
                   : "border-transparent text-muted hover:text-foreground hover:border-border"
               )}
             >
-              {tab.icon}
+              <span className="hidden sm:inline">{tab.icon}</span>
               {tab.label}
             </button>
           ))}
