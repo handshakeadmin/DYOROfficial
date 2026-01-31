@@ -302,11 +302,7 @@ function CheckoutContent(): React.JSX.Element {
 
                 <div className="flex justify-between text-sm">
                   <span className="text-muted">Shipping</span>
-                  {shipping === 0 ? (
-                    <span className="text-success">Free</span>
-                  ) : (
-                    <span>${shipping.toFixed(2)}</span>
-                  )}
+                  <span className="text-success">Free</span>
                 </div>
 
                 <div className="flex justify-between text-lg font-semibold pt-2 border-t border-border">

@@ -98,11 +98,7 @@ export function MobileOrderSummary({
 
             <div className="flex justify-between text-sm">
               <span className="text-muted">Shipping</span>
-              {shipping === 0 ? (
-                <span className="text-success">Free</span>
-              ) : (
-                <span>{formatPrice(shipping)}</span>
-              )}
+              <span className="text-success">Free</span>
             </div>
 
             <div className="flex justify-between font-semibold pt-2 border-t border-border">
