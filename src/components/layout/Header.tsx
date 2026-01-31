@@ -113,20 +113,20 @@ export function Header(): React.JSX.Element {
 
             {/* Right Icons */}
             <div className="flex items-center gap-2 sm:gap-4">
-              {/* Search */}
+              {/* Search - hidden on mobile, shown in mobile menu */}
               <button
                 type="button"
-                className="p-2 text-foreground hover:text-accent transition-colors"
+                className="hidden sm:block p-2 text-foreground hover:text-accent transition-colors"
                 onClick={() => setSearchOpen(!searchOpen)}
               >
                 <Search className="h-5 w-5" />
                 <span className="sr-only">Search</span>
               </button>
 
-              {/* AI Assistant */}
+              {/* AI Assistant - hidden on mobile */}
               <button
                 type="button"
-                className="p-2 text-foreground hover:text-accent transition-colors"
+                className="hidden sm:block p-2 text-foreground hover:text-accent transition-colors"
                 onClick={toggleChat}
                 id="ai-assistant-button"
               >
@@ -307,6 +307,35 @@ export function Header(): React.JSX.Element {
           </div>
 
           <nav className="p-4 space-y-2">
+            {/* Mobile Search */}
+            <button
+              type="button"
+              className="flex items-center gap-3 w-full py-3 px-4 text-foreground hover:bg-background-secondary rounded-lg transition-colors"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setSearchOpen(true);
+              }}
+            >
+              <Search className="h-5 w-5" />
+              <span>Search Products</span>
+            </button>
+
+            {/* Mobile AI Assistant */}
+            <button
+              type="button"
+              className="flex items-center gap-3 w-full py-3 px-4 text-foreground hover:bg-background-secondary rounded-lg transition-colors"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                toggleChat();
+              }}
+            >
+              <Sparkles className="h-5 w-5" />
+              <span>AI Assistant</span>
+            </button>
+
+            {/* Divider */}
+            <div className="border-t border-border my-2" />
+
             {navigation.map((item) => (
               <Link
                 key={item.name}
