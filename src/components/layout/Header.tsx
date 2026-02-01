@@ -123,10 +123,10 @@ export function Header(): React.JSX.Element {
                 <span className="sr-only">Search</span>
               </button>
 
-              {/* AI Assistant - hidden on mobile */}
+              {/* AI Assistant */}
               <button
                 type="button"
-                className="hidden sm:block p-2 text-foreground hover:text-accent transition-colors"
+                className="p-2 text-foreground hover:text-accent transition-colors"
                 onClick={toggleChat}
                 id="ai-assistant-button"
               >
